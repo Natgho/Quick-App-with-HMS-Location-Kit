@@ -1,0 +1,131 @@
+<template>
+  <!-- Only one root node is allowed in template. -->
+  <div class="container">
+    <text class="title">Location Finder</text>
+    <text>To find your place in the application, firstly press the "Obtain the geographical location" button. Then click the "show my location" button.
+      
+      After your location is determined, "Get information" will be automatically called for information about the location.
+      
+      </text>
+    <input type="button" class="mybutton" onclick="getGeolocation" value="Obtain the geographical location." />
+    <input type="button" class="mybutton" onclick="openLocation" value="Show my location" />
+    <input type="button" class="mybutton" onclick="getInfo" value="Get Information" />
+    <text class="data_message_shower">{{received_data}}</text>
+  </div>
+</template>
+
+<style>
+  .container {
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+  .mybutton {
+    font-size: 30px;
+    border-radius: 5px;
+    color: #ffffff;
+    background-color: #00bfff;
+    width: 80%;
+    margin: 10px;
+  }
+
+  .title {
+    font-size: 100px;
+    font-weight: bold;
+    color: #000000;
+  }
+  .data_message_shower {
+    margin-top: 20px;
+    text-align: center;
+  }
+</style>
+
+<script>
+  import geolocation from '@system.geolocation'
+  import prompt from '@system.prompt';
+  module.exports = {
+    data: {
+      information: {},
+      received_data: "",
+      lat: 41.029032,
+      lon: 29.117621
+    },
+    onInit() {
+      this.$page.setTitleBar({
+        text: 'Location Kit Example',
+        textColor: '#ffffff',
+        backgroundColor: '#007DFF',
+        backgroundOpacity: 0.5,
+        menu: true
+      });
+    },
+    getGeolocation: function () {
+      var that = this;
+      geolocation.getLocation({
+        coordType: "wgs84", //It indicates that the geographical location will be returned by invoking the system location ability.
+        timeout: 3000,
+        success: function (ret) {
+          that.lat = ret.latitude;
+          that.lon = ret.longitude;
+          that.received_data += JSON.stringify(ret) + "\n";
+          console.log('geolocation success---------' + JSON.stringify(ret));
+          that.getInfo();
+
+        },
+        fail: function (erromsg, errocode) {
+          prompt.showToast({
+            message: 'geolocation.getLocation----------' + errocode + ': ' + erromsg
+          })
+        },
+        complete: function () {
+          console.log('geolocation complete----------')
+        }
+      })
+    },
+    openLocation: function () {
+      var that = this;
+      if (that.lat === 41.029032 && that.lon === 29.117621) {
+        that.information['countryName'] = "Huawei";
+        that.information['province'] = "Huawei Turkey R&D";
+        prompt.showToast({
+          message: "The default address is shown."
+        })
+      }
+
+      geolocation.openLocation({
+        latitude: that.lat,
+        longitude: that.lon,
+        coordType: "gcj02",
+        name: that.information['countryName'],
+        address: that.information['province'],
+        scale: 18,
+        success: function () {
+          console.log('openLocation success . ');
+        },
+        fail: function (erromsg, errocode) {
+          console.log('geolocation.openLocation----------' + errocode + ': ' + erromsg)
+        },
+        complete: function () {
+          console.log('openLocation complete.');
+        }
+      })
+    },
+    getInfo: function () {
+      var that = this;
+      geolocation.reverseGeocodeQuery({
+        latitude: that.lat,
+        longitude: that.lon,
+        coordType: "gcj02",
+        includePoiInfo: true,
+        success: function (ret) {
+          that.information = ret;
+          that.received_data += JSON.stringify(ret) + "\n";
+          console.info(`### geolocation.reverseGeocodeQuery ###` + JSON.stringify(ret))
+        },
+        fail: function (errormsg, errorcode) {
+          console.info(`### geolocation.reverseGeocodeQuery ### ${errorcode}: ${errormsg}`)
+        }
+      })
+    }
+  }
+</script>

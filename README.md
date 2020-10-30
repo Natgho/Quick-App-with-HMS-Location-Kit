@@ -1,4 +1,4 @@
-# Push Kit integration into Quick App
+# Location Kit integration into Quick App
 ![work](work.gif)
 
 This repo explain how to integrate Location Kit into your Quick App.
